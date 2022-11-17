@@ -17,7 +17,7 @@ class MedscrapeClient {
     this.endpoint = '';
     if (this.mode === Modes.PRODUCTION) {
       // TODO: Set the final url for production
-      this.endpoint = 'https://api-dev.medscrape.com/';
+      this.endpoint = 'http://api-dev.medscrape.com/';
     } else if (this.mode === Modes.TEST) {
       this.endpoint = 'http://localhost:5002/';
     }
