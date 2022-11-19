@@ -25,6 +25,13 @@ const App = () => {
     callApi()
   }, [])
 
+  useEffect(() => {
+    if (Object.keys(user).length) {
+      console.log('signed in user: ', user.email)
+      refreshUserLists()
+    }
+  }, [user])
+
 
   const openModal = async (first, last, npi) => {
     setCurrentKol({ npi, first, last })
@@ -58,50 +65,48 @@ const App = () => {
   const createAccount = async (email, password) => {
     try {
       const createdUser = (await createUserWithEmailAndPassword(auth, email, password)).user
-      console.log(createdUser)
       const createUserBody = {
         email,
         uid: createdUser.uid
       }
       await axios.post(`/users`, createUserBody)
       console.log('created user successfully')
-      await initializeUserLists()
+      console.log('signed in')
+      setUser(auth.currentUser)
     }
     catch (e) {
       console.log(e)
     }
-
   }
 
   const signIn = async (email, password) => {
     try {
       await signInWithEmailAndPassword(auth, email, password)
       console.log('signed in successfully')
-      await initializeUserLists()
+      setUser(auth.currentUser)
     }
     catch (e) {
       console.log(e)
     }
   }
 
-  const initializeUserLists = async () => {
-    setUser(auth.currentUser)
-    console.log('inside initializeUserLists')
-    try {
-      const token = await user.getIdToken()
-      const config = {
-        headers: { Authorization: `Bearer ${token}` }
+  const refreshUserLists = async () => {
+    if (Object.keys(user).length) {
+      try {
+        const token = await user.getIdToken()
+        const config = {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+        const lists = await axios.get(`/lists`, config)
+        setUserLists(lists.data)
       }
-      const lists = await axios.get(`/lists`, config)
-      setUserLists(lists.data)
-    }
-    catch (e) {
-      console.log(e)
+      catch (e) {
+        console.log(e)
+      }
     }
   }
 
   const createTestList = async () => {
-    console.log(user)
     try {
       const token = await user.getIdToken()
       const config = {
@@ -122,6 +127,8 @@ const App = () => {
           }
         ]
       }, config)
+      console.log('list created successfully')
+      refreshUserLists()
     }
     catch (e) {
       console.log(e)
@@ -130,8 +137,8 @@ const App = () => {
 
   return (
     <div>
-      <button onClick={() => createAccount('bobsmith@gmail.com', 'password')}>Create Account</button>
-      <button onClick={() => signIn('bobsmith@gmail.com', 'password')}>Sign in</button>
+      <button onClick={() => createAccount('johnsmith@gmail.com', 'jsmith')}>Create Account {'(johnsmith@gmail.com)'}</button>
+      <button onClick={() => signIn('bobsmith@gmail.com', 'password')}>Sign in {'(bobsmith@gmail.com)'}</button>
       <button onClick={createTestList}>Create Test List</button>
       {kols.map(({ npi_number, first_name, last_name }) => {
         return (
